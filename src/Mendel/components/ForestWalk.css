@@ -1,0 +1,24 @@
+.forest-walk { margin: 24px 0; padding: 20px; border: 1px solid #b9c5a7; background: #f1f2e6; border-radius: 6px; }
+.walk-body { margin-top: 20px; }
+.walk-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 16px 0; }
+.walk-controls label { display: grid; gap: 6px; }
+.walk-controls select { max-width: 100%; padding: 8px; border: 1px solid #a5b09c; border-radius: 4px; background: #fffdf5; color: #284f43; font: inherit; }
+.walk-family { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.walk-family > div { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 14px 6px; min-height: 100px; background: #fffaf0; border: 1px solid #d6cbb3; border-radius: 5px; }
+.walk-family > div > span:first-child { font-size: .85rem; }
+.walk-family b { font-size: 28px; }
+.walk-status { font-weight: 600; }
+.walk-body progress { width: 100%; accent-color: #426b50; }
+.walk-stage { margin: 18px 0; padding: 18px; background: #fffdf5; border-radius: 6px; animation: walk-arrive .45s ease-out; }
+.walk-question { text-align: center; }
+.walk-question > span { font-size: 40px; }
+.walk-branches { display: flex; gap: 12px; justify-content: center; margin: 20px 0; }
+.walk-branches > span { padding: 12px; border: 1px dashed #a5b09c; border-radius: 6px; }
+.walk-branches .walk-chosen { background: #284f43; color: white; border-style: solid; }
+.walk-probabilities > div { display: grid; grid-template-columns: minmax(125px, 1fr) 2fr 65px; align-items: center; gap: 10px; margin: 12px 0; }
+.walk-track { background: #e9e5d8; height: 16px; border-radius: 10px; overflow: hidden; }
+.walk-track > span { display: block; height: 100%; transition: width .6s ease; }
+.walk-revealed { animation: walk-arrive .5s ease-out; }
+@keyframes walk-arrive { from { opacity: .3; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media(max-width:680px) { .forest-walk { padding: 12px; } .walk-family { grid-template-columns: repeat(2, minmax(0, 1fr)); } .walk-probabilities > div { grid-template-columns: minmax(0, 1fr) 65px; } .walk-track { grid-column: 1 / -1; grid-row: 2; } .walk-stage { padding: 12px; } }
+@media(prefers-reduced-motion:reduce) { .walk-stage, .walk-revealed { animation: none; } .walk-track > span { transition: none; } }

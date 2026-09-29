@@ -9,6 +9,7 @@ import { DEFAULTS, FOREST, INDEPENDENCE, KNOWN_SHARE, LAW, LINKAGE, OPTIONS, RAT
 import { dec, int, pct } from './lib/format.js';
 import Pheno, { PairLabel } from './components/Pheno.jsx';
 import Punnett from './components/Punnett.jsx';
+import ForestWalk from './components/ForestWalk.jsx';
 
 const VERDICT = {
   proposta: ['Proposta come legge', s.tagProposta],
@@ -184,6 +185,7 @@ export function Results({ r, S, step }) {
           ? `${num(NF)} proprietà: le osservazioni sì/no (${listIt(S.obs.map(o => o.label))}) di ${W.madre} e ${W.padre} e, per ${KN.il}, quanti ce ne sono di ciascun tipo`
           : `le ${num(NF)} osservazioni sì/no (${listIt(S.obs.map(o => o.label))} di ${W.madre}, ${W.padre} e ${W.primo})`} e il tipo del {W.secondo}. Costruisce {FOREST.trees} alberi di domande: ognuno vede un campione estratto a sorte {agree(W, 'delle', 'dei')} {int(r.counts.known)} {W.famiglie} e, a ogni domanda, solo {FOREST.mtry} delle {NF} {KN.many ? 'proprietà' : 'osservazioni'} sorteggiate; si ferma quando un gruppo scende sotto {TREE.minLeaf} {W.famiglie}. La previsione è la media dei {FOREST.trees} alberi.</p>
         <h3>Che cosa prevede per il {W.secondo}</h3>
+        {S.key === 'piselli' && r.forestWalk && <ForestWalk examples={r.forestWalk} S={S}/>}
         <ForestMap S={S} rows={r.forestMap} />
         <p className={s.note}>Media delle previsioni {agree(W, 'sulle', 'sugli')} {W.famiglie} {agree(W, 'conosciute', 'conosciuti')} di ciascuna coppia. Per le coppie mai viste la foresta combina ciò che ha imparato dalle singole osservazioni: è un’ipotesi, non un conteggio.</p>
         <h3>Quali osservazioni usa</h3>

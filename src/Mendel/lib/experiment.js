@@ -7,6 +7,7 @@ import { prepare, featuresOf, Y } from './genetics.js';
 import { buildTree, fitForest, fitTable, forestPredict, metrics, oobPredict, rng, shuffle, treeLeaf } from './forest.js';
 import { bestRatio, candidates, chiSquare, fisher, sameRatio } from './stats.js';
 import { int } from './format.js';
+import { makeForestWalk } from './forestWalk.js';
 
 export const OPTIONS = { families: [1000, 2500, 5000, 10000] };
 export const DEFAULTS = { scenario: 'piselli', families: 2500, seed: 1 };
@@ -322,6 +323,7 @@ export function run(input, progress = () => {}) {
     forestMap, importance, oobBase, laws, ratios, independence, linkage, features: F,
     contest, mendelExact, best: [...contest].sort((a, b) => a.m.scarto - b.m.scarto)[0].key,
     summary,
+    forestWalk: S.key === 'piselli' ? makeForestWalk(forest, fams, X, rest, fp, P.exact) : null,
   };
 }
 

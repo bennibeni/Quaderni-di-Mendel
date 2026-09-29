@@ -10,7 +10,7 @@ test('il metodo della home si renderizza senza dipendere da uno scenario', async
     const { default: Method } = await server.ssrLoadModule('/src/Mendel/Method.jsx');
     const html = renderToStaticMarkup(React.createElement(Method));
     assert.match(html, /01 · Il metodo/);
-    assert.match(html, /un primo figlio/);
+    assert.match(html, /primo seme/);
     assert.match(html, /Fase 3/);
   } finally {
     await server.close();
