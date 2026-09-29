@@ -67,8 +67,8 @@ const giallo = k => k % 2 === 0;
 const piselli = {
   key: 'piselli',
   title: 'Piselli di Mendel',
-  lead: 'Incroci di piante di pisello: forma e colore del seme della pianta madre, della pianta padre, del primo seme e del secondo seme.',
-  words: { g: 'm', deiGenitori: 'delle piante genitrici', individuo: 'pianta', famiglia: 'incrocio', famiglie: 'incroci', genitori: 'piante genitrici', genitore: 'genitore', madre: 'pianta madre', padre: 'pianta padre (polline)', primo: 'primo seme', secondo: 'secondo seme', secondi: 'secondi semi', figli: 'semi', figlio: 'seme', incrocio: 'incrocio' },
+  lead: 'Incroci di piante di pisello: forma e colore dei semi da cui sono nate le due piante genitrici, del primo seme e del secondo seme.',
+  words: { g: 'm', deiGenitori: 'delle piante genitrici', individuo: 'pianta', famiglia: 'incrocio', famiglie: 'incroci', genitori: 'piante genitrici', genitore: 'genitore', madre: 'pianta madre', padre: 'pianta donatrice di polline', primo: 'primo seme', secondo: 'secondo seme', secondi: 'secondi semi', figli: 'semi', figlio: 'seme', incrocio: 'incrocio' },
   loci: [
     { name: 'gene della forma', alleles: ['R', 'r'], freq: [0.5, 0.5] },
     { name: 'gene del colore', alleles: ['Y', 'y'], freq: [0.5, 0.5] },
@@ -242,7 +242,7 @@ const conigli = {
   ],
   bits: k => [k <= 1, k === 0 || k === 2],
   observation: 'Di ogni coniglio Mendel guarda il mantello e risponde a due domande. Il corpo è colorato? (sì per il colore pieno e per il cincillà, grigio argento; no per l’himalayano e l’albino, che hanno il corpo bianco). C’è colore scuro intenso? (sì per il colore pieno, su tutto il corpo, e per l’himalayano, solo su orecchie, naso e zampe; no per il cincillà e l’albino). La foresta riceve le quattro risposte di madre e padre e, per i primi quattro coniglietti della cucciolata, quanti ce ne sono di ciascun tipo: deve prevedere il mantello del quinto.',
-  population: 'Un allevamento misto: il 25% degli alleli è C, il 20% cchd, il 20% ch e il 35% c. Ne risultano circa 44% di conigli a colore pieno, 26% cincillà, 18% himalayani e 12% albini. Le coppie si formano a caso e ogni cucciolata ha almeno cinque piccoli. È lo stesso gene del giardino di R38, con un allele albino più frequente: sono gli albini a svelare gli alleli nascosti.',
+  population: 'Un allevamento misto: il 25% degli alleli è C, il 20% cchd, il 20% ch e il 35% c. Ne risultano circa 44% di conigli a colore pieno, 26% cincillà, 18% himalayani e 12% albini. Le coppie si formano a caso e ogni cucciolata ha almeno cinque piccoli. Sono gli albini a svelare gli alleli nascosti.',
   alleles: [
     'Il mantello dipende da un solo gene con quattro alleli, disposti in una scala di dominanza: C (colore pieno) > cchd (cincillà) > ch (himalayano) > c (albino). Ogni coniglio ne porta due e si vede quello più in alto nella scala.',
     'Così un coniglio a colore pieno può nascondere uno qualunque degli altri tre alleli, un cincillà può nascondere ch o c, un himalayano può nascondere c; solo l’albino è sempre c c.',
@@ -338,7 +338,7 @@ const gatti = {
   independence: 'Il pelo rosso dipende dal gene O sul cromosoma X, la diluizione dal gene D su un altro cromosoma: sapere se i genitori sono diluiti non dice nulla sul rosso dei gattini, e viceversa.',
   finalNote: {
     title: 'Madre e padre non sono intercambiabili.',
-    text: 'Negli altri scenari «A × B» e «B × A» danno gli stessi figli. Qui no: le leggi L1 e L2 dicono la stessa cosa scambiando madre e padre, ma la prima è vera e la seconda falsa; i rapporti R2 e R3 sono incroci inversi con risultati diversi. È il segno di un gene sul cromosoma X, lo stesso ragionamento con cui Thomas Morgan nel 1910 collocò sull’X il gene degli occhi bianchi del moscerino. Nel registro, per questo, le coppie sono sempre scritte madre × padre.',
+    text: 'Negli scenari con genitori equivalenti per i caratteri studiati, «A × B» e «B × A» hanno le stesse probabilità degli esiti. Nei gatti, come nella drosofila, il ruolo dei genitori conta. Qui le leggi L1 e L2 dicono la stessa cosa scambiando madre e padre, ma la prima è vera e la seconda falsa; i rapporti R2 e R3 sono incroci inversi con risultati diversi. È il segno di un gene sul cromosoma X, lo stesso ragionamento con cui Thomas Morgan nel 1910 collocò sull’X il gene degli occhi bianchi del moscerino. Nel registro, per questo, le coppie sono sempre scritte madre × padre.',
   },
 };
 
@@ -412,8 +412,8 @@ const oLungo = k => k % 2 === 0;
 const odoroso = {
   key: 'odoroso',
   title: 'Pisello odoroso',
-  lead: 'Incroci di pisello odoroso: colore del fiore e forma del polline della pianta madre, della pianta padre, del primo e del secondo seme.',
-  words: { g: 'm', deiGenitori: 'delle piante genitrici', individuo: 'pianta', famiglia: 'incrocio', famiglie: 'incroci', genitori: 'piante genitrici', genitore: 'genitore', madre: 'pianta madre', padre: 'pianta padre (polline)', primo: 'primo seme', secondo: 'secondo seme', secondi: 'secondi semi', figli: 'semi', figlio: 'seme', incrocio: 'incrocio' },
+  lead: 'Incroci di pisello odoroso: colore del fiore e forma del polline delle due piante genitrici e delle piante che si sviluppano dal primo e dal secondo seme.',
+  words: { g: 'm', deiGenitori: 'delle piante genitrici', individuo: 'pianta', famiglia: 'incrocio', famiglie: 'incroci', genitori: 'piante genitrici', genitore: 'genitore', madre: 'pianta madre', padre: 'pianta donatrice di polline', primo: 'primo seme', secondo: 'secondo seme', secondi: 'secondi semi', figli: 'semi', figlio: 'seme', incrocio: 'incrocio' },
   loci: [
     { name: 'gene C (colore)', alleles: ['C', 'c'], freq: [0.4, 0.6] },
     { name: 'gene P (porpora)', alleles: ['P', 'p'], freq: [0.4, 0.6] },

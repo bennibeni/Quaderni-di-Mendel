@@ -170,7 +170,7 @@ export function Results({ r, S, step }) {
         <h2>Che cosa Mendel ha davanti</h2>
         <p>Mendel conosce {int(r.counts.known)} {W.famiglie} {agree(W, 'complete', 'completi')} su {int(r.counts.total)}. Per ogni coppia di {W.genitori} annota quanti {W.figli} di ciascun tipo ha visto nascere, contando sia {KN.il} sia il {W.secondo}. {S.ordered
           ? ` Qui l’ordine conta: ${W.madre} × ${W.padre} e l’incrocio inverso possono dare figli diversi, quindi ogni riga è una coppia ${W.madre} × ${W.padre}.`
-          : ` Il registro è simmetrico: ${W.madre} × ${W.padre} e il contrario finiscono nella stessa riga.`}</p>
+          : ' Il registro è simmetrico: scambiare i due genitori non cambia le probabilità degli esiti nel modello, quindi i due ordini finiscono nella stessa riga.'}</p>
         <Registry S={S} rows={r.registry} title={unseen ? (unseen === 1 ? `Una coppia di ${W.genitori} non compare mai nel 20%: su quella Mendel non ha alcun dato diretto.` : `${unseen} coppie di ${W.genitori} non compaiono mai nel 20%: su quelle Mendel non ha alcun dato diretto.`) : `Nel 20% compaiono tutte le coppie di ${W.genitori} possibili.`} />
         <div className={s.explain}>
           <p><strong>Come leggerlo.</strong> Uno zero non significa «impossibile»: può voler dire che quel tipo di {W.figlio} è raro e non è ancora capitato. È proprio la trappola che Mendel deve evitare, e il motivo per cui si fa aiutare dalla foresta, che ragiona per somiglianze tra {W.famiglie} diverse invece di guardare solo le righe piene.</p>
@@ -187,6 +187,7 @@ export function Results({ r, S, step }) {
         <ForestMap S={S} rows={r.forestMap} />
         <p className={s.note}>Media delle previsioni {agree(W, 'sulle', 'sugli')} {W.famiglie} {agree(W, 'conosciute', 'conosciuti')} di ciascuna coppia. Per le coppie mai viste la foresta combina ciò che ha imparato dalle singole osservazioni: è un’ipotesi, non un conteggio.</p>
         <h3>Quali osservazioni usa</h3>
+        {!S.ordered && <p className={s.note}>Le osservazioni dei due genitori entrano nella foresta come dati separati. Una differenza nella loro importanza può dipendere dal campione e dall’addestramento: non dimostra una maggiore influenza genetica della madre o del padre. Per i caratteri studiati, i due ruoli sono equivalenti nel modello.</p>}
         <div className={s.bars}>
           {r.importance.map(x => {
             const max = r.importance[0].delta || 1;

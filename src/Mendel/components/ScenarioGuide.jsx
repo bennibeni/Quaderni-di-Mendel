@@ -13,6 +13,15 @@ const one = v => dec(v, 1);
 const LEVEL = { Facile: s.lvlEasy, Medio: s.lvlMid, 'Medio-difficile': s.lvlMidHard, Difficile: s.lvlHard, 'Molto difficile': s.lvlVeryHard };
 const MAX_ADV = 40;
 
+function NoteRef({ number }) {
+  const id = `guida-nota-${number}`;
+  return <button type="button" className={s.guideLink} aria-label={`Leggi la nota ${number}`} onClick={() => {
+    const note = document.getElementById(id);
+    note?.focus({ preventScroll: true });
+    note?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }}>{number === 1 ? '(*)' : '(**)'}</button>;
+}
+
 function AdvBar({ v }) {
   return (
     <span className={s.gBarWrap}>
@@ -57,7 +66,8 @@ export default function ScenarioGuide({ onClose, onPick }) {
         </div>
 
         <section className={s.guideSection}>
-          <p>Tutti e dieci gli scenari si prestano alla Random Forest: nelle medie riportate con 2.500 famiglie, in ciascuno la foresta prevede il {'secondo figlio'} meglio di un albero singolo e di una tabella di conteggio, e con il solo 20% dei dati le leggi di esclusione non sono quasi mai sbagliate. Cambiano invece la genetica che c’è sotto, quante combinazioni i dati devono coprire e che cosa Mendel riesce a scoprire.</p>
+          <p>Tutti e dieci gli scenari seguono lo stesso metodo: dai caratteri dei genitori e della discendenza già osservata, la Random Forest impara a prevedere i caratteri di un nuovo individuo. Nei piselli, per esempio, osserva forma e colore delle due piante genitrici e del primo seme per prevedere forma e colore del secondo seme.</p>
+          <p>Nelle medie riportate con 2.500 incroci per scenario, la foresta prevede questi esiti meglio di un albero singolo e di una tabella di conteggio, e con il solo 20% dei dati le leggi di esclusione non sono quasi mai sbagliate. Cambiano invece la genetica che c’è sotto, quante combinazioni i dati devono coprire e che cosa Mendel riesce a scoprire. Qui usiamo «incroci» come termine comune: nei piselli sono incroci tra piante, negli altri scenari corrispondono alle famiglie o alle cucciolate simulate.</p>
           <p><strong>Che cosa vuol dire «difficile».</strong> L’ordine è quello della difficoltà per Mendel: quante leggi e quanti rapporti riconosce già con il 20%, quanti ne deve rimandare ai dati completi, quanti giudizi sbaglia e quanto la biologia si allontana dal modello semplice dei piselli. Non coincide con la bontà per la foresta: la foresta brilla dove le combinazioni sono tante rispetto ai dati, e tra gli scenari più difficili ci sono quelli in cui vince di più.</p>
         </section>
 
@@ -68,9 +78,9 @@ export default function ScenarioGuide({ onClose, onPick }) {
               <thead>
                 <tr>
                   <th>#</th><th>Scenario</th><th>Genetica</th><th>Tipi · coppie</th>
-                  <th>Foresta meglio della tabella<small>2.500 famiglie</small></th>
+                  <th>Foresta meglio della tabella<small>2.500 incroci</small></th>
                   <th>…dell’albero</th>
-                  <th>…della tabella<small>10.000 famiglie</small></th>
+                  <th>…della tabella<small>10.000 incroci</small></th>
                   <th>Leggi giuste col 20%</th>
                   <th>Rapporti col 20% · dopo</th>
                   <th>Giudizi sbagliati</th>
@@ -99,7 +109,7 @@ export default function ScenarioGuide({ onClose, onPick }) {
               </tbody>
             </table>
           </div>
-          <p className={s.note}>Medie su 10 semi con 2.500 famiglie (Mendel ne conosce 500); la colonna con 10.000 famiglie è la media di 3 semi. «Foresta meglio di…» è la riduzione dello scarto dalla risposta esatta. Il tetto di Mendel è la quota di {'secondi figli'} indovinati da chi conosce gli alleli dei genitori: è un riferimento teorico in media, non un limite invalicabile per ogni singolo campione.</p>
+          <p className={s.note}>Medie su 10 valori del seme casuale con 2.500 incroci (Mendel conosce l’esito da prevedere per 500 di essi); la colonna con 10.000 incroci è la media di 3 valori del seme casuale. Il seme casuale determina i dati generati dalla simulazione e non va confuso con il seme della pianta. «Foresta meglio di…» è la riduzione dello scarto dalla risposta esatta. Il tetto di Mendel è la quota di esiti indovinati da chi conosce gli alleli dei genitori: nei piselli, il tipo del secondo seme, definito da forma e colore. È un riferimento teorico in media, non un limite invalicabile per ogni singolo campione.</p>
         </section>
 
         {GUIDE.map((g, i) => {
@@ -117,22 +127,22 @@ export default function ScenarioGuide({ onClose, onPick }) {
               <div className={s.guideFacts}>
                 <div><b>{m.genes}</b><span>genetica</span></div>
                 <div><b>{m.K} tipi · {m.GM === m.GF ? `${m.GM} genotipi` : `${m.GM} genotipi (madri), ${m.GF} (padri)`}</b><span>dati</span></div>
-                <div><b>{m.pairs} coppie{S.ordered ? ' ordinate' : ''} · {m.features} proprietà</b><span>{m.litter > 1 ? `${m.litter} fratelli già nati` : '1 fratello già nato'}</span></div>
+                <div><b>{m.pairs} coppie{S.ordered ? ' ordinate' : ''} · {m.features} proprietà</b><span>{m.litter > 1 ? `${m.litter} fratelli già nati` : `${S.words.primo} già osservato`}</span></div>
                 <div><b>{m.advT}% · {m.adv}%</b><span>foresta meglio di tabella · albero</span></div>
               </div>
               <h4>Che cosa lo rende particolare</h4>
               <p>{g.peculiar}</p>
               <h4>I dati</h4>
-              <p>{g.data}</p>
+              <p>{g.data} <NoteRef number={1} /></p>
               <h4>L’elaborazione</h4>
-              <p>{g.processing} <em>Osservazione più usata dalla foresta: {m.top}.</em></p>
+              <p>{g.processing} <em>Osservazione più usata dalla foresta: {m.top}.</em>{!S.ordered && <> <NoteRef number={2} /></>}</p>
               <h4>I risultati</h4>
               <p>{g.results}</p>
               <ul className={s.guideList}>
                 <li>Leggi di esclusione: {one(m.laws.right)} giuste già col 20%, {one(m.laws.later)} decise con i dati completi, {one(m.laws.wrong)} sbagliate, su {m.laws.tot}.</li>
                 <li>Rapporti: {one(m.ratios.right)} riconosciuti col 20%, {one(m.ratios.later)} con i dati completi, {one(m.ratios.open)} aperti, {one(m.ratios.wrong)} sbagliati, su {m.ratios.tot}.</li>
                 <li>Indipendenza: {m.ind}.</li>
-                <li>Vantaggio della foresta sulla tabella: {m.advT}% con 2.500 famiglie, {m.advT10}% con 10.000.</li>
+                <li>Vantaggio della foresta sulla tabella: {m.advT}% con 2.500 {S.words.famiglie}, {m.advT10}% con 10.000.</li>
               </ul>
               <h4>La biologia</h4>
               <p>{g.biology}</p>
@@ -141,7 +151,11 @@ export default function ScenarioGuide({ onClose, onPick }) {
           );
         })}
 
-        <p className={s.note}>I numeri di questa guida sono stati misurati con lo stesso codice della pagina. Ripetendo l’esperimento con un seme diverso i risultati di un singolo esperimento possono scostarsi dalle medie.</p>
+        <p className={s.note}>I numeri di questa guida sono stati misurati con lo stesso codice della pagina. Ripetendo l’esperimento con un seme casuale diverso i risultati di un singolo esperimento possono scostarsi dalle medie.</p>
+        <section className={s.guideSection} aria-label="Note sulla terminologia">
+          <p id="guida-nota-1" tabIndex={-1} className={s.note}><strong>(*) I ruoli dei genitori.</strong> Nei piselli e nel pisello odoroso, la pianta madre riceve il polline e porta i semi; l’altra pianta dona il polline. Sono ruoli nel singolo incrocio: ciascuna pianta possiede fiori con organi maschili e femminili. Negli scenari con genitori equivalenti, scambiarne i ruoli lascia invariate le probabilità degli esiti per i caratteri studiati nel modello, anche se i risultati di singoli campioni possono differire. Questo non implica equivalenza per ogni carattere o processo biologico. Nei gatti e nella drosofila, invece, i ruoli possono cambiare le probabilità degli esiti: nei gatti conta il gene sull’X, nella drosofila la ricombinazione avviene solo nelle femmine.</p>
+          <p id="guida-nota-2" tabIndex={-1} className={s.note}><strong>(**)</strong> La foresta riceve separatamente le osservazioni dei due genitori. Negli scenari in cui i loro ruoli sono equivalenti, se attribuisce più importanza a una di esse, descrive ciò che ha imparato dai dati simulati, non una maggiore influenza genetica di quel genitore.</p>
+        </section>
       </div>
     </div>
   );
