@@ -1,49 +1,533 @@
-import ErrorBoundary from './ErrorBoundary.jsx';
-import ScenarioIcon from './Mendel/components/ScenarioIcon.jsx';
-import ParentNote from './Mendel/components/ParentNote.jsx';
-import React, { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { SCENARIOS, SCENARIO_LIST } from './Mendel/lib/scenarios.js';
-import { DEFAULTS, OPTIONS, validate } from './Mendel/lib/experiment.js';
-import ScenarioGuide from './Mendel/components/ScenarioGuide.jsx';
-import Method from './Mendel/Method.jsx';
-import Deepening from './Mendel/Deepening.jsx';
-import { DEEPENING_TITLES } from './Mendel/lib/deepening.js';
-import { Results } from './Mendel/Results.jsx';
-import Pheno from './Mendel/components/Pheno.jsx';
-import s from './Mendel/Mendel.module.css';
-import './style.css';
-const STEPS = ['Lo scenario', 'Il registro', 'La foresta', 'Le esclusioni', 'I rapporti', 'Due caratteri o uno?', 'Le previsioni', 'I dati completi', 'La verità degli alleli', 'Il bilancio'];
-const SLUGS = ['scenario','registro','foresta','esclusioni','rapporti','caratteri','previsioni','dati-completi','alleli','bilancio'];
-const href=(key,step=0)=>`#/scenari/${key}/${SLUGS[step]}`;
-function route(){const parts=location.hash.replace(/^#\/?/,'').split('/');if(!parts[0])return {home:true};if(parts[0]==='approfondimenti'&&DEEPENING_TITLES[parts[1]]&&parts.length===2)return {key:parts[1],deepening:true};const step=SLUGS.indexOf(parts[2]||'scenario');return parts[0]==='scenari'&&SCENARIOS[parts[1]]&&step>=0?{key:parts[1],step}:{missing:true};}
-function App(){
- const [guide,setGuide]=useState(false);
- const [page,setPage]=useState(route);const [sessions,setSessions]=useState(()=>Object.fromEntries(SCENARIO_LIST.map(S=>[S.key,{cfg:{...DEFAULTS,scenario:S.key},result:null,status:null,error:null}])));const workers=useRef({});const heading=useRef(null);
- useEffect(()=>{const update=()=>setPage(route());window.addEventListener('hashchange',update);return()=>{window.removeEventListener('hashchange',update);Object.values(workers.current).forEach(w=>w.terminate());};},[]);
- useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});heading.current?.focus();document.title=page.key?`${SCENARIOS[page.key].title} · ${page.deepening ? DEEPENING_TITLES[page.key] : STEPS[page.step]} · Mendel`:'Mendel · Il quaderno di Mendel';},[page]);
- const patch=(key,values)=>setSessions(old=>({...old,[key]:{...old[key],...values}}));
- function start(key){const session=sessions[key];let cfg;try{cfg=validate(session.cfg);}catch(e){patch(key,{error:e.message});return;}workers.current[key]?.terminate();patch(key,{status:'Preparazione dell’esperimento…',error:null});let worker;try{worker=new Worker(new URL('./Mendel/lib/worker.js',import.meta.url),{type:'module'});}catch{patch(key,{status:null,error:'Il browser non può avviare il calcolo. Prova un browser con supporto Web Worker.'});return;}workers.current[key]=worker;
- worker.onmessage=({data})=>{if(workers.current[key]!==worker)return;if(data.type==='progress')patch(key,{status:data.msg});else{patch(key,data.type==='done'?{result:data.result,status:null,error:null}:{error:data.message,status:null});worker.terminate();delete workers.current[key];}};
- worker.onerror=()=>{patch(key,{status:null,error:'Calcolo interrotto. Puoi riprovare.'});worker.terminate();delete workers.current[key];};worker.postMessage(cfg);}
- function cancel(key){workers.current[key]?.terminate();delete workers.current[key];patch(key,{status:null,error:null});}
- const S=SCENARIOS[page.key],session=sessions[page.key];
- return <><a className="skip" href="#content" onClick={e=>{e.preventDefault();heading.current?.focus();}}>Vai al contenuto</a><header className="topbar"><a className="brand" href="#/">Mendel <span>IL QUADERNO DI MENDEL</span></a><nav aria-label="Navigazione principale"><a href="#/" aria-current={page.home?'page':undefined}>Pagina principale</a><button type="button" className="guide-nav" onClick={()=>setGuide(true)}>Guida</button><details key={page.key||'home'}><summary>Scenari</summary><div className="dropdown">{SCENARIO_LIST.map(sc=><a href={href(sc.key)} key={sc.key} aria-current={page.key===sc.key?'page':undefined}><ScenarioIcon scenario={sc.key}/>{sc.title}</a>)}</div></details></nav></header>
- <main id="content" className={`${s.lab} shell`}>
- {page.home?<><div className="home-intro"><div className="intro"><p className="overline">OSSERVARE · FORMULARE · VERIFICARE</p><h1 ref={heading} tabIndex="-1">Il quaderno di Mendel<span>Le leggi dell’ereditarietà,<br/>una scoperta alla volta.</span></h1><p>Immaginiamo un Mendel che non sa nulla di genetica. Sa osservare, contare e incrociare. Una <a href="https://it.wikipedia.org/wiki/Random_forest" target="_blank" rel="noopener noreferrer">Random Forest</a> lo aiuta a formulare ipotesi; i dati completi e la verità degli alleli le mettono alla prova.</p></div><figure className="mendel-portrait"><img src="/images/mendel-ritratto-personale.webp" width="800" height="921" alt="Mendel scrive sul quaderno, circondato da piccoli animali e piante illustrati: un gatto e una gallina sulle spalle, un topo sui capelli, coniglio, Labrador, cavallo, moscerino, piselli e fiori sulla scrivania." fetchpriority="high" /></figure></div><Method/><section className="scenario-section"><p className="overline">02 · GLI SCENARI</p><h2>Scegli il tuo esperimento</h2><p>Un metodo comune, {SCENARIO_LIST.length} modi di esplorare l’ereditarietà. Gli scenari sono in ordine di difficoltà, dal più facile al più difficile.</p><button type="button" className={`${s.button} ${s.ghost}`} onClick={()=>setGuide(true)}>Leggi la guida ai dieci scenari</button><div className="scenario-grid">{SCENARIO_LIST.map((sc,i)=><a className="scenario-banner" href={href(sc.key)} key={sc.key}><span className="scenario-number">{String(i+1).padStart(2,'0')} / SCENARIO</span><h3><ScenarioIcon scenario={sc.key}/>{sc.title}</h3><p>{sc.lead}</p><div className="phenotypes">{sc.phenotypes.map((_,k)=><Pheno key={k} S={sc} k={k}/>)}</div><span className="open-label">Esplora lo scenario <span aria-hidden="true">↗</span></span>{sessions[sc.key].status&&<small>Simulazione in corso</small>}{sessions[sc.key].result&&<small>Risultati disponibili</small>}</a>)}</div></section></>:page.deepening?<Deepening key={page.key} scenario={S} heading={heading}/>:page.missing?<section><h1 ref={heading} tabIndex="-1">Pagina non trovata</h1><a href="#/">Torna alla pagina principale</a></section>:<>
- <a className="back" href="#/">← Pagina principale</a><div className="scenario-heading"><p className="overline">IL QUADERNO DI MENDEL / SCENARIO</p><h1 ref={heading} tabIndex="-1"><ScenarioIcon scenario={S.key}/>{S.title}</h1><p>{S.lead}</p></div><div className="reading-layout"><aside><p className="overline">IL PERCORSO</p><nav aria-label="Sezioni dello scenario">{STEPS.map((name,i)=><a key={name} href={href(S.key,i)} aria-current={page.step===i?'step':undefined}><span>{String(i+1).padStart(2,'0')}</span>{name}</a>)}</nav><p className="session-note">Parametri e risultati restano disponibili finché questa scheda è aperta.</p></aside><div className="reading-content"><div className="progress-label"><span>{page.step===0?'Preparazione':page.step<=5?'Fase 1 · Il 20%':page.step<=7?'Fase 2 · I dati completi':page.step===8?'Fase 3 · La verità':'Conclusioni'}</span><span>{page.step+1} / {STEPS.length}</span></div><progress value={page.step+1} max={STEPS.length} aria-label="Avanzamento di lettura"/>
- {session.status&&<div className="run-status" role="status">{session.status}<button onClick={()=>cancel(S.key)}>Annulla calcolo</button></div>}
- {page.step===0?<section className={s.card}><p className={s.eyebrow}>02 · Lo scenario</p><h2>Che cosa osserva Mendel</h2><p>{S.observation}</p><ParentNote scenario={S}/><div className="phenotypes">{S.phenotypes.map((_,k)=><Pheno key={k} S={S} k={k}/>)}</div><h3>La popolazione</h3><p>{S.population}</p><div className="experiment"><h3>Prepara l’esperimento</h3><div className={s.form}><label className={s.field}>Numero di {S.words.famiglie}<select value={session.cfg.families} disabled={!!session.status} onChange={e=>patch(S.key,{cfg:{...session.cfg,families:Number(e.target.value)}})}>{OPTIONS.families.map(n=><option key={n} value={n}>{n.toLocaleString('it-IT')}{n===2500?' · consigliato':''}</option>)}</select></label><label>Seme casuale<input type="number" min="1" step="1" value={session.cfg.seed} disabled={!!session.status} onChange={e=>patch(S.key,{cfg:{...session.cfg,seed:e.target.value}})}/></label></div><p className={s.note}>Lo stesso seme, nello stesso scenario e con lo stesso numero di famiglie, riproduce l’esperimento. Mendel conosce inizialmente il 20% dei casi.</p><button className={s.button} disabled={!!session.status} onClick={()=>start(S.key)}>{session.result?'Ripeti l’esperimento':'Avvia l’esperimento'}</button>{session.error&&<p role="alert" className={s.error}>{session.error}</p>}{session.result&&<p>Esperimento pronto. <a href={href(S.key,1)}>Leggi il registro →</a></p>}</div><p className={s.note}>Con 1.000 famiglie più ipotesi restano aperte; 2.500 è il numero consigliato in Mendel. Con 10.000 anche i semplici conteggi diventano più informativi.</p></section>:session.result?<><p className="result-context">Risultati: {session.result.config.families.toLocaleString('it-IT')} {S.words.famiglie} · seme {session.result.config.seed}{(Number(session.cfg.seed)!==session.result.config.seed||session.cfg.families!==session.result.config.families)&&' · Parametri modificati: ripeti l’esperimento per aggiornarli.'}</p><Results r={session.result} S={S} step={page.step}/></>:<section className={`${s.card} empty`}><p className={s.eyebrow}>SEZIONE {page.step+1}</p><h2>{STEPS[page.step]}</h2><p>{session.status ? 'La simulazione è in corso. I risultati appariranno qui al termine del calcolo.' : 'Questa sezione mostra le osservazioni e i risultati del tuo esperimento. Avvia la simulazione per leggerla.'}</p><a className="primary-link" href={href(S.key)}>Prepara l’esperimento</a></section>}
- {page.step===9&&DEEPENING_TITLES[S.key]&&<section className={s.card}><p className={s.eyebrow}>PER APPROFONDIRE</p><h2>{DEEPENING_TITLES[S.key]}</h2><p>Un esempio guidato per capire come le osservazioni aiutano la Random Forest a prevedere la discendenza. Puoi leggerlo anche senza eseguire la simulazione.</p><a className="primary-link" href={`#/approfondimenti/${S.key}`}>Approfondisci · {DEEPENING_TITLES[S.key]} →</a></section>}
- <nav className="pager" aria-label="Navigazione tra le sezioni">{page.step>0?<a href={href(S.key,page.step-1)}>← Precedente<small>{STEPS[page.step-1]}</small></a>:<a href="#/">← Pagina principale</a>}{page.step<9?<a href={href(S.key,page.step+1)}>Successivo →<small>{STEPS[page.step+1]}</small></a>:<a href="#/">Torna agli scenari →</a>}</nav></div></div></>}
- {guide && <ScenarioGuide onClose={()=>setGuide(false)} onPick={key=>{setGuide(false);location.hash=href(key).slice(1);}}/>}
- <p className="educational-note"><strong>Un laboratorio didattico.</strong> Le simulazioni usano modelli genetici semplificati e popolazioni generate casualmente. I risultati dipendono dai parametri e dal seme scelto; non descrivono tutta la complessità biologica.</p>
- <footer>Mendel · Laboratorio della Random Forest <span>Osservare non basta. Mettiamo alla prova le ipotesi.</span></footer>
-      <footer className="projects-footer">
-        <a href="https://links-page-bennibeni.vercel.app/">
-          &larr; All projects
-        </a>
-      </footer>
- </main></>;
+import ErrorBoundary from "./ErrorBoundary.jsx";
+import ScenarioIcon from "./Mendel/components/ScenarioIcon.jsx";
+import ParentNote from "./Mendel/components/ParentNote.jsx";
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { SCENARIOS, SCENARIO_LIST } from "./Mendel/lib/scenarios.js";
+import { DEFAULTS, OPTIONS, validate } from "./Mendel/lib/experiment.js";
+import ScenarioGuide from "./Mendel/components/ScenarioGuide.jsx";
+import Method from "./Mendel/Method.jsx";
+import Deepening from "./Mendel/Deepening.jsx";
+import { DEEPENING_TITLES } from "./Mendel/lib/deepening.js";
+import { Results } from "./Mendel/Results.jsx";
+import Pheno from "./Mendel/components/Pheno.jsx";
+import s from "./Mendel/Mendel.module.css";
+import "./style.css";
+const STEPS = [
+  "Lo scenario",
+  "Il registro",
+  "La foresta",
+  "Le esclusioni",
+  "I rapporti",
+  "Due caratteri o uno?",
+  "Le previsioni",
+  "I dati completi",
+  "La verità degli alleli",
+  "Il bilancio",
+];
+const SLUGS = [
+  "scenario",
+  "registro",
+  "foresta",
+  "esclusioni",
+  "rapporti",
+  "caratteri",
+  "previsioni",
+  "dati-completi",
+  "alleli",
+  "bilancio",
+];
+const href = (key, step = 0) => `#/scenari/${key}/${SLUGS[step]}`;
+function route() {
+  const parts = location.hash.replace(/^#\/?/, "").split("/");
+  if (!parts[0]) return { home: true };
+  if (
+    parts[0] === "approfondimenti" &&
+    DEEPENING_TITLES[parts[1]] &&
+    parts.length === 2
+  )
+    return { key: parts[1], deepening: true };
+  const step = SLUGS.indexOf(parts[2] || "scenario");
+  return parts[0] === "scenari" && SCENARIOS[parts[1]] && step >= 0
+    ? { key: parts[1], step }
+    : { missing: true };
 }
-createRoot(document.getElementById('root')).render(<ErrorBoundary><App/></ErrorBoundary>);
+function App() {
+  const [guide, setGuide] = useState(false);
+  const [page, setPage] = useState(route);
+  const [sessions, setSessions] = useState(() =>
+    Object.fromEntries(
+      SCENARIO_LIST.map((S) => [
+        S.key,
+        {
+          cfg: { ...DEFAULTS, scenario: S.key },
+          result: null,
+          status: null,
+          error: null,
+        },
+      ]),
+    ),
+  );
+  const workers = useRef({});
+  const heading = useRef(null);
+  useEffect(() => {
+    const update = () => setPage(route());
+    window.addEventListener("hashchange", update);
+    return () => {
+      window.removeEventListener("hashchange", update);
+      Object.values(workers.current).forEach((w) => w.terminate());
+    };
+  }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    heading.current?.focus();
+    document.title = page.key
+      ? `${SCENARIOS[page.key].title} · ${page.deepening ? DEEPENING_TITLES[page.key] : STEPS[page.step]} · Mendel`
+      : "Mendel · Il quaderno di Mendel";
+  }, [page]);
+  const patch = (key, values) =>
+    setSessions((old) => ({ ...old, [key]: { ...old[key], ...values } }));
+  function start(key) {
+    const session = sessions[key];
+    let cfg;
+    try {
+      cfg = validate(session.cfg);
+    } catch (e) {
+      patch(key, { error: e.message });
+      return;
+    }
+    workers.current[key]?.terminate();
+    patch(key, { status: "Preparazione dell’esperimento…", error: null });
+    let worker;
+    try {
+      worker = new Worker(new URL("./Mendel/lib/worker.js", import.meta.url), {
+        type: "module",
+      });
+    } catch {
+      patch(key, {
+        status: null,
+        error:
+          "Il browser non può avviare il calcolo. Prova un browser con supporto Web Worker.",
+      });
+      return;
+    }
+    workers.current[key] = worker;
+    worker.onmessage = ({ data }) => {
+      if (workers.current[key] !== worker) return;
+      if (data.type === "progress") patch(key, { status: data.msg });
+      else {
+        patch(
+          key,
+          data.type === "done"
+            ? { result: data.result, status: null, error: null }
+            : { error: data.message, status: null },
+        );
+        worker.terminate();
+        delete workers.current[key];
+      }
+    };
+    worker.onerror = () => {
+      patch(key, {
+        status: null,
+        error: "Calcolo interrotto. Puoi riprovare.",
+      });
+      worker.terminate();
+      delete workers.current[key];
+    };
+    worker.postMessage(cfg);
+  }
+  function cancel(key) {
+    workers.current[key]?.terminate();
+    delete workers.current[key];
+    patch(key, { status: null, error: null });
+  }
+  const S = SCENARIOS[page.key],
+    session = sessions[page.key];
+  return (
+    <>
+      <a
+        className="skip"
+        href="#content"
+        onClick={(e) => {
+          e.preventDefault();
+          heading.current?.focus();
+        }}
+      >
+        Vai al contenuto
+      </a>
+      <header className="topbar">
+        <a className="brand" href="#/">
+          Mendel <span>IL QUADERNO DI MENDEL</span>
+        </a>
+        <nav aria-label="Navigazione principale">
+          <a href="#/" aria-current={page.home ? "page" : undefined}>
+            Pagina principale
+          </a>
+          <button
+            type="button"
+            className="guide-nav"
+            onClick={() => setGuide(true)}
+          >
+            Guida
+          </button>
+          <details key={page.key || "home"}>
+            <summary>Scenari</summary>
+            <div className="dropdown">
+              {SCENARIO_LIST.map((sc) => (
+                <a
+                  href={href(sc.key)}
+                  key={sc.key}
+                  aria-current={page.key === sc.key ? "page" : undefined}
+                >
+                  <ScenarioIcon scenario={sc.key} />
+                  {sc.title}
+                </a>
+              ))}
+            </div>
+          </details>
+        </nav>
+      </header>
+      <main id="content" className={`${s.lab} shell`}>
+        {page.home ? (
+          <>
+            <div className="home-intro">
+              <div className="intro">
+                <p className="overline">OSSERVARE · FORMULARE · VERIFICARE</p>
+                <h1 ref={heading} tabIndex="-1">
+                  Il quaderno di Mendel
+                  <span>
+                    Le leggi dell’ereditarietà,
+                    <br />
+                    una scoperta alla volta.
+                  </span>
+                </h1>
+                <p>
+                  Immaginiamo un Mendel che non sa nulla di genetica. Sa
+                  osservare, contare e incrociare. Una{" "}
+                  <a
+                    href="https://it.wikipedia.org/wiki/Random_forest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Random Forest
+                  </a>{" "}
+                  lo aiuta a formulare ipotesi; i dati completi e la verità
+                  degli alleli le mettono alla prova.
+                </p>
+              </div>
+              <figure className="mendel-portrait">
+                <img
+                  src="/images/mendel-ritratto-personale.webp"
+                  width="800"
+                  height="921"
+                  alt="Mendel scrive sul quaderno, circondato da piccoli animali e piante illustrati: un gatto e una gallina sulle spalle, un topo sui capelli, coniglio, Labrador, cavallo, moscerino, piselli e fiori sulla scrivania."
+                  fetchpriority="high"
+                />
+              </figure>
+            </div>
+            <Method />
+            <section className="scenario-section">
+              <p className="overline">02 · GLI SCENARI</p>
+              <h2>Scegli il tuo esperimento</h2>
+              <p>
+                Un metodo comune, {SCENARIO_LIST.length} modi di esplorare
+                l’ereditarietà. Gli scenari sono in ordine di difficoltà, dal
+                più facile al più difficile.
+              </p>
+              <button
+                type="button"
+                className={`${s.button} ${s.ghost}`}
+                onClick={() => setGuide(true)}
+              >
+                Leggi la guida ai dieci scenari
+              </button>
+              <div className="scenario-grid">
+                {SCENARIO_LIST.map((sc, i) => (
+                  <a
+                    className="scenario-banner"
+                    href={href(sc.key)}
+                    key={sc.key}
+                  >
+                    <span className="scenario-number">
+                      {String(i + 1).padStart(2, "0")} / SCENARIO
+                    </span>
+                    <h3>
+                      <ScenarioIcon scenario={sc.key} />
+                      {sc.title}
+                    </h3>
+                    <p>{sc.lead}</p>
+                    <div className="phenotypes">
+                      {sc.phenotypes.map((_, k) => (
+                        <Pheno key={k} S={sc} k={k} />
+                      ))}
+                    </div>
+                    <span className="open-label">
+                      Esplora lo scenario <span aria-hidden="true">↗</span>
+                    </span>
+                    {sessions[sc.key].status && (
+                      <small>Simulazione in corso</small>
+                    )}
+                    {sessions[sc.key].result && (
+                      <small>Risultati disponibili</small>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : page.deepening ? (
+          <Deepening key={page.key} scenario={S} heading={heading} />
+        ) : page.missing ? (
+          <section>
+            <h1 ref={heading} tabIndex="-1">
+              Pagina non trovata
+            </h1>
+            <a href="#/">Torna alla pagina principale</a>
+          </section>
+        ) : (
+          <>
+            <a className="back" href="#/">
+              ← Pagina principale
+            </a>
+            <div className="scenario-heading">
+              <p className="overline">IL QUADERNO DI MENDEL / SCENARIO</p>
+              <h1 ref={heading} tabIndex="-1">
+                <ScenarioIcon scenario={S.key} />
+                {S.title}
+              </h1>
+              <p>{S.lead}</p>
+            </div>
+            <div className="reading-layout">
+              <aside>
+                <p className="overline">IL PERCORSO</p>
+                <nav aria-label="Sezioni dello scenario">
+                  {STEPS.map((name, i) => (
+                    <a
+                      key={name}
+                      href={href(S.key, i)}
+                      aria-current={page.step === i ? "step" : undefined}
+                    >
+                      <span>{String(i + 1).padStart(2, "0")}</span>
+                      {name}
+                    </a>
+                  ))}
+                </nav>
+                <p className="session-note">
+                  Parametri e risultati restano disponibili finché questa scheda
+                  è aperta.
+                </p>
+              </aside>
+              <div className="reading-content">
+                <div className="progress-label">
+                  <span>
+                    {page.step === 0
+                      ? "Preparazione"
+                      : page.step <= 5
+                        ? "Fase 1 · Il 20%"
+                        : page.step <= 7
+                          ? "Fase 2 · I dati completi"
+                          : page.step === 8
+                            ? "Fase 3 · La verità"
+                            : "Conclusioni"}
+                  </span>
+                  <span>
+                    {page.step + 1} / {STEPS.length}
+                  </span>
+                </div>
+                <progress
+                  value={page.step + 1}
+                  max={STEPS.length}
+                  aria-label="Avanzamento di lettura"
+                />
+                {session.status && (
+                  <div className="run-status" role="status">
+                    {session.status}
+                    <button onClick={() => cancel(S.key)}>
+                      Annulla calcolo
+                    </button>
+                  </div>
+                )}
+                {page.step === 0 ? (
+                  <section className={s.card}>
+                    <p className={s.eyebrow}>02 · Lo scenario</p>
+                    <h2>Che cosa osserva Mendel</h2>
+                    <p>{S.observation}</p>
+                    <ParentNote scenario={S} />
+                    <div className="phenotypes">
+                      {S.phenotypes.map((_, k) => (
+                        <Pheno key={k} S={S} k={k} />
+                      ))}
+                    </div>
+                    <h3>La popolazione</h3>
+                    <p>{S.population}</p>
+                    <div className="experiment">
+                      <h3>Prepara l’esperimento</h3>
+                      <div className={s.form}>
+                        <label className={s.field}>
+                          Numero di {S.words.famiglie}
+                          <select
+                            value={session.cfg.families}
+                            disabled={!!session.status}
+                            onChange={(e) =>
+                              patch(S.key, {
+                                cfg: {
+                                  ...session.cfg,
+                                  families: Number(e.target.value),
+                                },
+                              })
+                            }
+                          >
+                            {OPTIONS.families.map((n) => (
+                              <option key={n} value={n}>
+                                {n.toLocaleString("it-IT")}
+                                {n === 2500 ? " · consigliato" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          Seme casuale
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={session.cfg.seed}
+                            disabled={!!session.status}
+                            onChange={(e) =>
+                              patch(S.key, {
+                                cfg: { ...session.cfg, seed: e.target.value },
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <p className={s.note}>
+                        Lo stesso seme, nello stesso scenario e con lo stesso
+                        numero di famiglie, riproduce l’esperimento. Mendel
+                        conosce inizialmente il 20% dei casi.
+                      </p>
+                      <button
+                        className={s.button}
+                        disabled={!!session.status}
+                        onClick={() => start(S.key)}
+                      >
+                        {session.result
+                          ? "Ripeti l’esperimento"
+                          : "Avvia l’esperimento"}
+                      </button>
+                      {session.error && (
+                        <p role="alert" className={s.error}>
+                          {session.error}
+                        </p>
+                      )}
+                      {session.result && (
+                        <p>
+                          Esperimento pronto.{" "}
+                          <a href={href(S.key, 1)}>Leggi il registro →</a>
+                        </p>
+                      )}
+                    </div>
+                    <p className={s.note}>
+                      Con 1.000 famiglie più ipotesi restano aperte; 2.500 è il
+                      numero consigliato in Mendel. Con 10.000 anche i semplici
+                      conteggi diventano più informativi.
+                    </p>
+                  </section>
+                ) : session.result ? (
+                  <>
+                    <p className="result-context">
+                      Risultati:{" "}
+                      {session.result.config.families.toLocaleString("it-IT")}{" "}
+                      {S.words.famiglie} · seme {session.result.config.seed}
+                      {(Number(session.cfg.seed) !==
+                        session.result.config.seed ||
+                        session.cfg.families !==
+                          session.result.config.families) &&
+                        " · Parametri modificati: ripeti l’esperimento per aggiornarli."}
+                    </p>
+                    <Results r={session.result} S={S} step={page.step} />
+                  </>
+                ) : (
+                  <section className={`${s.card} empty`}>
+                    <p className={s.eyebrow}>SEZIONE {page.step + 1}</p>
+                    <h2>{STEPS[page.step]}</h2>
+                    <p>
+                      {session.status
+                        ? "La simulazione è in corso. I risultati appariranno qui al termine del calcolo."
+                        : "Questa sezione mostra le osservazioni e i risultati del tuo esperimento. Avvia la simulazione per leggerla."}
+                    </p>
+                    <a className="primary-link" href={href(S.key)}>
+                      Prepara l’esperimento
+                    </a>
+                  </section>
+                )}
+                {page.step === 9 && DEEPENING_TITLES[S.key] && (
+                  <section className={s.card}>
+                    <p className={s.eyebrow}>PER APPROFONDIRE</p>
+                    <h2>{DEEPENING_TITLES[S.key]}</h2>
+                    <p>
+                      Un esempio guidato per capire come le osservazioni aiutano
+                      la Random Forest a prevedere la discendenza. Puoi leggerlo
+                      anche senza eseguire la simulazione.
+                    </p>
+                    <a
+                      className="primary-link"
+                      href={`#/approfondimenti/${S.key}`}
+                    >
+                      Approfondisci · {DEEPENING_TITLES[S.key]} →
+                    </a>
+                  </section>
+                )}
+                <nav className="pager" aria-label="Navigazione tra le sezioni">
+                  {page.step > 0 ? (
+                    <a href={href(S.key, page.step - 1)}>
+                      ← Precedente<small>{STEPS[page.step - 1]}</small>
+                    </a>
+                  ) : (
+                    <a href="#/">← Pagina principale</a>
+                  )}
+                  {page.step < 9 ? (
+                    <a href={href(S.key, page.step + 1)}>
+                      Successivo →<small>{STEPS[page.step + 1]}</small>
+                    </a>
+                  ) : (
+                    <a href="#/">Torna agli scenari →</a>
+                  )}
+                </nav>
+              </div>
+            </div>
+          </>
+        )}
+        {guide && (
+          <ScenarioGuide
+            onClose={() => setGuide(false)}
+            onPick={(key) => {
+              setGuide(false);
+              location.hash = href(key).slice(1);
+            }}
+          />
+        )}
+        <p className="educational-note">
+          <strong>Un laboratorio didattico.</strong> Le simulazioni usano
+          modelli genetici semplificati e popolazioni generate casualmente. I
+          risultati dipendono dai parametri e dal seme scelto; non descrivono
+          tutta la complessità biologica.
+        </p>
+        <footer>
+          Mendel · Laboratorio della Random Forest{" "}
+          <span>Osservare non basta. Mettiamo alla prova le ipotesi.</span>
+        </footer>
+        <footer className="projects-footer">
+          <a href="https://links-page-bennibeni.vercel.app/">
+            &larr; All projects
+          </a>
+        </footer>
+      </main>
+    </>
+  );
+}
+createRoot(document.getElementById("root")).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);
